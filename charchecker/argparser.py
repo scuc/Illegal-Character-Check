@@ -159,7 +159,6 @@ def build_parser(formatter=WrappedNewlineFormatter):
     )
 
     args = parser.parse_args()
-    print(args)
 
     return args
 
