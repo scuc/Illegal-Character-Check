@@ -7,8 +7,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "illegal_character_check"
 version = "0.0.1"
-description = "A script to find and report on all illegal 
-               characters in a filesystem."
+description = "A script to find and report on all illegal characters in a filesystem."
 readme = "README.md"
 authors = [{ name = "Steven Cucolo", email = "steven.cucolo@natgeo.com" }]
 
