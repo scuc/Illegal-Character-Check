@@ -71,16 +71,20 @@ def main():
         [x for x in args.characters[0]] if args.characters != 0 else illegal_chars
     )
 
+    # args.whitespace = [True if args.whitespace != 0 else False]
+
     args_msg = f"\n\
      Aruguments used: \n\
         Characters: {args.characters}\n\
         Destination: {args.destination}\n\
         String: {args.string}\n\
-        Output: {args.output}\n\
+        Output: {args.format}\n\
         Path: {args.path}\n\
         Recursive: {args.recursive}\n\
+        Whitespace: {args.whitespace}\n\
         "
 
+    args.__dict__.update({"args_msg": args_msg})
     logger.info(args_msg)
 
     date_start = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))

@@ -111,7 +111,7 @@ def build_parser(formatter=WrappedNewlineFormatter):
         help=textwrap.fill("limit character search to specific values\n"),
         metavar="",
         required=False,
-        type=checklist,
+        type=check_list,
     )
     parser.add_argument(
         "-d",
@@ -120,20 +120,11 @@ def build_parser(formatter=WrappedNewlineFormatter):
         help="output locaton for results of the search",
         metavar="<file path>",
         required=False,
-        type=str,
+        type=check_destination,
     )
     parser.add_argument(
-        "-s",
-        "--string",
-        default=None,
-        help="set a string (eg.'word') to check against set --path",
-        metavar="[...]",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
+        "-f",
+        "--format",
         default=".txt",
         help="select file type for the results, defaults to a .txt file",
         metavar="<file type>",
@@ -157,6 +148,22 @@ def build_parser(formatter=WrappedNewlineFormatter):
         help="Use flag to perform a recursive check on all directories and files in set --path",
         required=False,
     )
+    parser.add_argument(
+        "-s",
+        "--string",
+        default=None,
+        help="set a string (eg.'word') to check against set --path",
+        metavar="[...]",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "-w",
+        "--whitespace",
+        action="store_true",
+        default=False,
+        help="check for illegal whitespace characters in set path",
+    )
 
     args = parser.parse_args()
 
@@ -170,7 +177,7 @@ def filesystempath(astring):
         return os.path.join(astring)
 
 
-def checklist(astring):
+def check_list(astring):
     chars = [x for x in astring]
     char_list = list(set(chars))  # remove duplicate characters
 
@@ -180,6 +187,14 @@ def checklist(astring):
         else:
             continue
     return astring
+
+
+def check_destination(astring):
+    dest = astring
+    if os.path.exists(dest):
+        return astring
+    else:
+        raise argparse.ArgumentTypeError
 
 
 if __name__ == "__main__":
