@@ -10,6 +10,29 @@ from argparser import build_parser
 
 logger = logging.getLogger(__name__)
 
+illegal_chars = [
+    "@",
+    ":",
+    "*",
+    "?",
+    "!",
+    "<",
+    ">",
+    "|",
+    "&",
+    "#",
+    "%",
+    "$",
+    "~",
+    "+",
+    "=",
+    "'",
+    '"',
+    "{",
+    "}",
+    "^",
+]
+
 
 def set_logger():
     """
@@ -42,15 +65,21 @@ def set_logger():
 def main():
     args = build_parser()
 
+    print(type(args.characters))
+
+    args.characters = (
+        [x for x in args.characters[0]] if args.characters != 0 else illegal_chars
+    )
+
     args_msg = f"\n\
      Aruguments used: \n\
         Characters: {args.characters}\n\
         Destination: {args.destination}\n\
-        Extra: {args.extra}\n\
+        String: {args.string}\n\
         Output: {args.output}\n\
         Path: {args.path}\n\
         Recursive: {args.recursive}\n\
-     "
+        "
 
     logger.info(args_msg)
 

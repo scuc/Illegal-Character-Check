@@ -105,8 +105,8 @@ def build_parser(formatter=WrappedNewlineFormatter):
         "-c",
         "--characters",
         action="store",
-        choices=illegal_chars,
-        default=illegal_chars,
+        # choices=illegal_chars,
+        default=0,
         nargs="*",
         help=textwrap.fill("limit character search to specific values\n"),
         metavar="",
@@ -123,10 +123,10 @@ def build_parser(formatter=WrappedNewlineFormatter):
         type=str,
     )
     parser.add_argument(
-        "-e",
-        "--extra",
+        "-s",
+        "--string",
         default=None,
-        help="Extra characters to check against set --path",
+        help="set a string (eg.'word') to check against set --path",
         metavar="[...]",
         required=False,
         type=str,
@@ -172,9 +172,9 @@ def filesystempath(astring):
 
 def checklist(astring):
     chars = [x for x in astring]
-    print(chars)
-    for x in chars:
-        print(x)
+    char_list = list(set(chars))  # remove duplicate characters
+
+    for x in char_list:
         if x not in illegal_chars:
             raise argparse.ArgumentTypeError
         else:

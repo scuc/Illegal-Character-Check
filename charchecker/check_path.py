@@ -63,6 +63,7 @@ def check_set_path(args):
                 # Check all files, in all sub-dir in set path
                 for name in files:
                     path = Path(root, name)
+                    print(f"PATH TOTAL: {path_total}")
                     path_total["file_count"] += 1
                     if (
                         name.startswith(".DS_Store")
@@ -140,9 +141,13 @@ def illegalchar_check(args, path, path_total, illegal_total):
     illegalchar_count = 0
     illegal_chars = []
 
-    illegalchar_list = [args.characters]
+    illegalchar_list = [x for x in args.characters]
 
     illegalchar_count = len([x for x in path.name if x in illegalchar_list])
+
+    format_illchar_list = ["\\" + x + "|" for x in illegalchar_list]
+    # build the regex from the illegal character list
+    regex_var = "".join(item for item in format_illchar_list)
 
     try:
         # regex to match on:
@@ -150,9 +155,12 @@ def illegalchar_check(args, path, path_total, illegal_total):
         # period preceding "/" or at the end of a path
         # remove matches and count number of subs
 
-        pattern = re.compile(
-            r"(\||\'|\"|\}|\{|\:|\=|\@|\*|\?|\!|\<|\>|\&|\#|\%|\$|\~|\+|\.$|^\.)"
-        )
+        # pattern = re.compile(
+        #     r"(\||\'|\"|\}|\{|\:|\=|\@|\*|\?|\!|\<|\>|\&|\#|\%|\$|\~|\+|\.$|^\.)"
+        # )
+
+        pattern = re.compile(rf"({regex_var[:-1]})")
+        # https://stackoverflow.com/questions/6930982/how-to-use-a-variable-inside-a-regular-expression
 
         for match in re.findall(pattern, path.name):
             illegalchar_count += 1 if match[0] != "" else 0
@@ -248,10 +256,8 @@ def prepare_summary(args, path_total, illegal_total):
 def write_to_file(*args, **kwargs):
     file_date = str(strftime("%Y%m%d", localtime()))
     loc = os.getcwd()
-    print(loc)
     with open(f"{file_date}_illegal_paths.txt", "a+") as f:
         for key, value in kwargs.items():
-            print(key, value)
             f.write(f"{key}: {value}\n")
         f.write("\n")
         f.close()
@@ -259,33 +265,4 @@ def write_to_file(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    # one = [
-    #         "@",
-    #         ":",
-    #         "*",
-    #         "?",
-    #         "!",
-    #         '"',
-    #         "'",
-    #         "<",
-    #         ">",
-    #         "|",
-    #         "&",
-    #         "#",
-    #         "%",
-    #         "$",
-    #         "~",
-    #         "+",
-    #         "=",
-    #         "'",
-    #         '"',
-    #         "{",
-    #         "}",
-    #         "^",
-    #     ],
-    # two = "/Users/cucos001/GitHub/Illegal-Character-Check",
-    # three = None,
-    # four = ".txt",
-    # five = "/Users/cucos001/Desktop/test/",
-    # six = True,
     check_set_path()
