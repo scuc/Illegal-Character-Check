@@ -24,6 +24,7 @@ def check_set_path(args):
     ================================================================\n\
    "
     write_to_file(start_msg=start_msg)
+    write_to_file(args_msg=args.args_msg)
 
     path_total = {
         "char_limit_count": 0,
@@ -42,7 +43,7 @@ def check_set_path(args):
 
     try:
         if args.recursive is not True:
-            path_total, illegal_total = check_current_path(
+            path_total, illegal_total = check_path(
                 args, args.path, path_total, illegal_total
             )
             illegal_total = whitespace_check(args.path, illegal_total)
@@ -56,14 +57,13 @@ def check_set_path(args):
                 for name in dirs:
                     path = Path(root, name)
                     path_total["dir_count"] += 1
-                    path_total, illegal_total = check_current_path(
+                    path_total, illegal_total = check_path(
                         args, path, path_total, illegal_total
                     )
 
                 # Check all files, in all sub-dir in set path
                 for name in files:
                     path = Path(root, name)
-                    print(f"PATH TOTAL: {path_total}")
                     path_total["file_count"] += 1
                     if (
                         name.startswith(".DS_Store")
@@ -108,14 +108,17 @@ def check_set_path(args):
         return exitcode
 
 
-def check_current_path(args, path, path_total, illegal_total):
+def check_path(args, path, path_total, illegal_total):
     """
     Check the current path for whitespace and illegal characters.
     """
     try:
-        whitespace_match = whitespace_check(path, illegal_total)
-        whitespace_count = len(whitespace_match)
-        illegal_total.update({"whitespace_count": whitespace_count})
+        if args.whitespace is not False:
+            whitespace_match = whitespace_check(path, illegal_total)
+            whitespace_count = len(whitespace_match)
+            illegal_total.update({"whitespace_count": whitespace_count})
+        else:
+            pass
 
         path_total, illegal_total = illegalchar_check(
             args, path, path_total, illegal_total
@@ -211,54 +214,62 @@ def prepare_summary(args, path_total, illegal_total):
     """
     Prepare a summary of totals and pass it to write_to_file method.
     """
-    left_curly_brace_total = path_total["illegal_char_list"].count("{")
-    right_curly_brace_total = path_total["illegal_char_list"].count("}")
-    single_quote_total = path_total["illegal_char_list"].count("'")
-    double_quote_total = path_total["illegal_char_list"].count('"')
 
+    unique_char_list = set(path_total["illegal_char_list"])
+
+    summary_list = []
     date_end = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))
-    summary = f"\n========================== END CHECK: {date_end} ================================\n\
+
+    part_1 = f"\n\
+    ========================== SUMMARY ================================\n\
+            Check completed on: {date_end}\n\
+            Path checked = {args.path} \n\
             Recursive check: {args.recursive}\n\
-            path checked = {args.path} \n\
+            WhiteSpace check: {args.whitespace}\n\
+            "
+    summary_list.append(part_1)
+
+    if args.whitespace is not False:
+        part_2 = f"            {illegal_total['whitespace_count']} illegal whitespace characters found."
+        summary_list.append(part_2)
+    else:
+        part_2 = ""
+
+    part_3 = f"\n\
             {path_total['dir_count']} sub-directories in path.\n\
             {path_total['file_count']} files in path.\n\
             {path_total['illegal_dirname_total']} directory names with illegal characters.\n\
             {path_total['illegal_filename_total']} filenames with illegal characters.\n\
             {path_total['char_limit_count']} file paths that exceed the 255 Windows limit.\n\
-            {illegal_total['whitespace_count']} illegal whitespace characters found.\n\
             {path_total['ds_count']} .DS_Store files found in path.\n\
             {len(path_total['illegal_char_list'])} illegal characters in total: \n\
-                @ [{path_total['illegal_char_list'].count('@')}] \n\
-                : [{path_total['illegal_char_list'].count(':')}] \n\
-                * [{path_total['illegal_char_list'].count('*')}] \n\
-                ? [{path_total['illegal_char_list'].count('?')}] \n\
-                ! [{path_total['illegal_char_list'].count('!')}] \n\
-                > [{path_total['illegal_char_list'].count('>')}] \n\
-                < [{path_total['illegal_char_list'].count('<')}] \n\
-                | [{path_total['illegal_char_list'].count('|')}] \n\
-                & [{path_total['illegal_char_list'].count('&')}] \n\
-                # [{path_total['illegal_char_list'].count('#')}] \n\
-                % [{path_total['illegal_char_list'].count('%')}] \n\
-                $ [{path_total['illegal_char_list'].count('$')}] \n\
-                ~ [{path_total['illegal_char_list'].count('~')}] \n\
-                + [{path_total['illegal_char_list'].count('+')}] \n\
-                = [{path_total['illegal_char_list'].count('+')}] \n\
-                {{ [{left_curly_brace_total}] \n\
-                }} [{right_curly_brace_total}] \n\
-                ' [{single_quote_total}] \n\
-                \" [{double_quote_total}] \n\
-    =================================================================================================\n\
+            \n\
+            "
+
+    summary_list.append(part_3)
+
+    part_4 = ""
+    for item in unique_char_list:
+        line = f"            {item} [{path_total['illegal_char_list'].count(item)}]\n"
+        part_4 += line
+    part_4 += "================================================================================================\n\
     "
-    logger.info(summary)
-    return summary
+    summary_list.append(part_4)
+
+    logger.info(summary_list)
+    return summary_list
 
 
 def write_to_file(*args, **kwargs):
     file_date = str(strftime("%Y%m%d", localtime()))
-    loc = os.getcwd()
     with open(f"{file_date}_illegal_paths.txt", "a+") as f:
         for key, value in kwargs.items():
-            f.write(f"{key}: {value}\n")
+            if key != "summary":
+                f.write(f"\n{key}: {value}")
+            else:
+                for line in value:
+                    f.write(line + "\n")
+
         f.write("\n")
         f.close()
     return
