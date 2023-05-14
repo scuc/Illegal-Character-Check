@@ -256,7 +256,12 @@ def prepare_summary(args, path_total, illegal_total):
     "
     summary_list.append(part_4)
 
-    logger.info(summary_list)
+    # format summary for log files.
+    summary_msg = ""
+    for x in summary_list:
+        summary_msg += x
+
+    logger.info(summary_msg)
     return summary_list
 
 
