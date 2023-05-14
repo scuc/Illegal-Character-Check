@@ -77,7 +77,6 @@ def main():
      Aruguments used: \n\
         Characters: {args.characters}\n\
         Destination: {args.destination}\n\
-        String: {args.string}\n\
         Output: {args.format}\n\
         Path: {args.path}\n\
         Recursive: {args.recursive}\n\
@@ -85,7 +84,6 @@ def main():
         "
 
     args.__dict__.update({"args_msg": args_msg})
-    logger.info(args_msg)
 
     date_start = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))
 
@@ -96,6 +94,7 @@ def main():
     ================================================================"
 
     logger.info(start_msg)
+    logger.info(args_msg)
 
     exit_code = check_path.check_set_path(args)
 

@@ -149,15 +149,6 @@ def build_parser(formatter=WrappedNewlineFormatter):
         required=False,
     )
     parser.add_argument(
-        "-s",
-        "--string",
-        default=None,
-        help="set a string (eg.'word') to check against set --path",
-        metavar="[...]",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
         "-w",
         "--whitespace",
         action="store_true",
