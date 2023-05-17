@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import textwrap
 
 illegal_chars = [
@@ -137,7 +138,7 @@ def build_parser(formatter=WrappedNewlineFormatter):
         default=None,
         help="required value: path to check against for illegal characters",
         metavar="<file path>",
-        required=True,
+        required=False,
         type=filesystempath,
     )
     parser.add_argument(
@@ -156,7 +157,9 @@ def build_parser(formatter=WrappedNewlineFormatter):
         help="check for illegal whitespace characters in set path",
     )
 
+    # parser.set_defaults(func=lambda x: parser.print_usage())
     args = parser.parse_args()
+    args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
 
     return args
 

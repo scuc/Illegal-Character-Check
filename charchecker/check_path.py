@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import logging
 import os
 import re
@@ -11,7 +9,7 @@ from time import localtime, strftime
 logger = logging.getLogger(__name__)
 
 
-def check_set_path(args):
+def check_path(args):
     """
     Check each path and look for any illegal characters or whitespace.
     """
@@ -43,11 +41,21 @@ def check_set_path(args):
 
     try:
         if args.recursive is not True:
-            path_total, illegal_total = check_path(
-                args, args.path, path_total, illegal_total
-            )
-            illegal_total = whitespace_check(args.path, illegal_total)
-            summary = prepare_summary(path_total, illegal_total)
+            for item in os.listdir(Path(args.path)):
+                path = Path(args.path, item)
+                path_total = update_count(path, path_total)
+                path_total = path_len_check(path, path_total)
+
+                path_total, illegal_total = illegalchar_check(
+                    args, path, path_total, illegal_total
+                )
+
+                if args.whitespace is not False:
+                    illegal_total = whitespace_check(path, illegal_total)
+                else:
+                    pass
+
+            summary = prepare_summary(args, path_total, illegal_total)
             write_to_file(summary)
             return exitcode
 
@@ -56,40 +64,22 @@ def check_set_path(args):
                 # Check all sub-dir in set path
                 for name in dirs:
                     path = Path(root, name)
-                    path_total["dir_count"] += 1
-                    path_total, illegal_total = check_path(
+                    path_total = update_count(path, path_total)
+                    path_total, illegal_total = illegalchar_check(
                         args, path, path_total, illegal_total
                     )
 
                 # Check all files, in all sub-dir in set path
                 for name in files:
                     path = Path(root, name)
-                    path_total["file_count"] += 1
-                    if (
-                        name.startswith(".DS_Store")
-                        or name.startswith("._")
-                        and os.stat(name).st_size < 5000
-                    ):
-                        path_total["ds_count"] += 1
-                        continue
-                    else:
-                        illegal_total = whitespace_check(path, illegal_total)
-                        path_total, illegal_total = illegalchar_check(
-                            args, path, path_total, illegal_total
-                        )
+                    path_total = update_count(path, path_total)
+                    path_total = path_len_check(path, path_total)
 
-                        if len(str(path)) > 255:
-                            illegal_path = path
-                            char_limit_msg = f"Too many characters for Windows path (>255): \n {illegal_path} "
-                            logger.info(char_limit_msg)
+                    path_total, illegal_total = illegalchar_check(
+                        args, path, path_total, illegal_total
+                    )
 
-                            write_to_file(
-                                illegal_path=str(illegal_path),
-                                path_length=len(str(illegal_path)),
-                            )
-                            path_total["char_limit_count"] += 1
-                        else:
-                            pass
+                    illegal_total = whitespace_check(path, illegal_total)
 
         summary = prepare_summary(args, path_total, illegal_total)
         write_to_file(summary=summary)
@@ -108,33 +98,27 @@ def check_set_path(args):
         return exitcode
 
 
-def check_path(args, path, path_total, illegal_total):
+def update_count(path, path_total):
     """
-    Check the current path for whitespace and illegal characters.
+    Update the path_total count.
+    Counts files, dirs, and invisible files in
+    a given path.
     """
-    try:
-        if args.whitespace is not False:
-            whitespace_match = whitespace_check(path, illegal_total)
-            whitespace_count = len(whitespace_match)
-            illegal_total.update({"whitespace_count": whitespace_count})
-        else:
-            pass
+    if path.is_dir():
+        path_total["dir_count"] += 1
+    else:
+        path_total["file_count"] += 1
 
-        path_total, illegal_total = illegalchar_check(
-            args, path, path_total, illegal_total
-        )
+    if (
+        path.name.startswith(".DS_Store")
+        or path.name.startswith("._")
+        and os.stat(path.name).st_size < 5000
+    ):
+        path_total["ds_count"] += 1
+    else:
+        pass
 
-        return path_total, illegal_total
-
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        excp_msg = f" Exception raised: {e}\n\
-                      TYPE: {exc_type},\n\
-                      FNAME: {fname},\n\
-                      LINENO: {exc_tb.tb_lineno}\n\
-                    "
-        logger.error(excp_msg)
+    return path_total
 
 
 def illegalchar_check(args, path, path_total, illegal_total):
@@ -178,10 +162,12 @@ def illegalchar_check(args, path, path_total, illegal_total):
                 path_total["illegal_char_list"] += illegal_chars
                 count = Counter(illegalchar_count=len(illegal_chars))
                 illegal_total.update(count)
-                write_to_file(illegal_path=path, illegal_chars=illegal_chars)
             else:
                 continue
 
+            write_to_file(illegal_path=path, illegal_chars=illegal_chars)
+
+        # print(f"ILLEGAL CHECK: {path_total}, {illegal_total}")
         return path_total, illegal_total
 
     except Exception as e:
@@ -194,10 +180,11 @@ def illegalchar_check(args, path, path_total, illegal_total):
                     "
         logger.error(excp_msg)
 
-    return illegalchar_count, illegal_chars
-
 
 def whitespace_check(path, illegal_total):
+    """
+    Check for leading or trailing whitespace characters in the file path.
+    """
     pattern = re.compile(r"(^\s+|\s+$|\s+/|/\s+)")
     whitespace_match = re.findall(pattern, str(path))
     whitespace_count = len(whitespace_match)
@@ -207,7 +194,33 @@ def whitespace_check(path, illegal_total):
             whitespace_count=whitespace_count,
         )
         illegal_total.update({"whitespace_count": whitespace_count})
+    else:
+        illegal_total
+
     return illegal_total
+
+
+def path_len_check(path, path_total):
+    """
+    Check the length of a path and if length is over 255 characters
+    record the path and the length in the output.txt
+    """
+    if len(str(path)) > 255:
+        illegal_path = path
+        char_limit_msg = (
+            f"Too many characters for Windows path (>255): \n {illegal_path} "
+        )
+        logger.info(char_limit_msg)
+
+        write_to_file(
+            illegal_path=str(illegal_path),
+            path_length=len(str(illegal_path)),
+        )
+        path_total["char_limit_count"] += 1
+    else:
+        pass
+
+    return path_total
 
 
 def prepare_summary(args, path_total, illegal_total):
@@ -229,32 +242,31 @@ def prepare_summary(args, path_total, illegal_total):
             "
     summary_list.append(part_1)
 
-    if args.whitespace is not False:
-        part_2 = f"            {illegal_total['whitespace_count']} illegal whitespace characters found."
-        summary_list.append(part_2)
-    else:
-        part_2 = ""
-
-    part_3 = f"\n\
+    part_2 = f"\n\
             {path_total['dir_count']} sub-directories in path.\n\
             {path_total['file_count']} files in path.\n\
             {path_total['illegal_dirname_total']} directory names with illegal characters.\n\
             {path_total['illegal_filename_total']} filenames with illegal characters.\n\
             {path_total['char_limit_count']} file paths that exceed the 255 Windows limit.\n\
             {path_total['ds_count']} .DS_Store files found in path.\n\
-            {len(path_total['illegal_char_list'])} illegal characters in total: \n\
-            \n\
             "
+    summary_list.append(part_2)
 
-    summary_list.append(part_3)
+    if args.whitespace is not False:
+        part_3 = f"\n            {illegal_total['whitespace_count']} illegal whitespace characters found."
+        summary_list.append(part_3)
+    else:
+        part_3 = ""
 
     part_4 = ""
     for item in unique_char_list:
         line = f"            {item} [{path_total['illegal_char_list'].count(item)}]\n"
         part_4 += line
-    part_4 += "================================================================================================\n\
+
+    part_5 = "\n================================================================================================\n\
     "
     summary_list.append(part_4)
+    summary_list.append(part_5)
 
     # format summary for log files.
     summary_msg = ""
@@ -281,4 +293,4 @@ def write_to_file(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    check_set_path()
+    check_path()

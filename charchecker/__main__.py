@@ -4,9 +4,10 @@ import os
 from datetime import datetime
 from time import localtime, strftime
 
-import check_path
 import yaml
-from argparser import build_parser
+
+from .argparser import build_parser
+from .check_path import check_path
 
 logger = logging.getLogger(__name__)
 
@@ -63,15 +64,12 @@ def set_logger():
 
 
 def main():
+    set_logger()
     args = build_parser()
-
-    print(type(args.characters))
 
     args.characters = (
         [x for x in args.characters[0]] if args.characters != 0 else illegal_chars
     )
-
-    # args.whitespace = [True if args.whitespace != 0 else False]
 
     args_msg = f"\n\
      Aruguments used: \n\
@@ -96,7 +94,7 @@ def main():
     logger.info(start_msg)
     logger.info(args_msg)
 
-    exit_code = check_path.check_set_path(args)
+    exit_code = check_path(args)
 
     if exit_code != 0:
         logger.info("\nPath check did not complete sucessfully.\n")

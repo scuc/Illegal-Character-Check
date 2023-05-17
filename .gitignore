@@ -153,3 +153,7 @@ cython_debug/
 config.yaml
 _old/*
 .DS_Store
+
+*.spec, 
+build/
+dist/
