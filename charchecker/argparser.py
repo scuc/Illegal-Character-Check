@@ -79,14 +79,14 @@ def build_parser(formatter=WrappedNewlineFormatter):
     May 2023
 
     USAGE:
-    A script to find and report on all illegal 
+    A script to find and report on all illegal
     characters in a filesystem.
-    
+
     Default list of illegal chars:
     @ , : * ? ! " ' < > | & # % $ ~ + = { } ^
-    
+
     Add additional search characters with the -e flag.
-    
+
     ======================================
     """
 
@@ -146,7 +146,7 @@ def build_parser(formatter=WrappedNewlineFormatter):
         "--recursive",
         action="store_true",
         default=False,
-        help="Use flag to perform a recursive check on all directories and files in set --path",
+        help="perform a recursive check on all directories and files in set --path",
         required=False,
     )
     parser.add_argument(

@@ -165,9 +165,9 @@ def illegalchar_check(args, path, path_total, illegal_total):
             else:
                 continue
 
+        if len(illegal_chars) > 0:
             write_to_file(illegal_path=path, illegal_chars=illegal_chars)
 
-        # print(f"ILLEGAL CHECK: {path_total}, {illegal_total}")
         return path_total, illegal_total
 
     except Exception as e:
