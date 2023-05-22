@@ -44,19 +44,19 @@ def check_path(args):
             for item in os.listdir(Path(args.path)):
                 path = Path(args.path, item)
                 path_total = update_count(path, path_total)
-                path_total = path_len_check(path, path_total)
+                path_total = path_len_check(args, path, path_total)
 
                 path_total, illegal_total = illegalchar_check(
                     args, path, path_total, illegal_total
                 )
 
                 if args.whitespace is not False:
-                    illegal_total = whitespace_check(path, illegal_total)
+                    illegal_total = whitespace_check(args, path, illegal_total)
                 else:
                     pass
 
             summary = prepare_summary(args, path_total, illegal_total)
-            write_to_file(summary)
+            write_to_file(destination=args.destination, summary=summary)
             return exitcode
 
         else:
@@ -73,16 +73,16 @@ def check_path(args):
                 for name in files:
                     path = Path(root, name)
                     path_total = update_count(path, path_total)
-                    path_total = path_len_check(path, path_total)
+                    path_total = path_len_check(args, path, path_total)
 
                     path_total, illegal_total = illegalchar_check(
                         args, path, path_total, illegal_total
                     )
 
-                    illegal_total = whitespace_check(path, illegal_total)
+                    illegal_total = whitespace_check(args, path, illegal_total)
 
         summary = prepare_summary(args, path_total, illegal_total)
-        write_to_file(summary=summary)
+        write_to_file(args, summary=summary)
         return exitcode
 
     except Exception as e:
@@ -166,7 +166,7 @@ def illegalchar_check(args, path, path_total, illegal_total):
                 continue
 
         if len(illegal_chars) > 0:
-            write_to_file(illegal_path=path, illegal_chars=illegal_chars)
+            write_to_file(args, illegal_path=path, illegal_chars=illegal_chars)
 
         return path_total, illegal_total
 
@@ -181,7 +181,7 @@ def illegalchar_check(args, path, path_total, illegal_total):
         logger.error(excp_msg)
 
 
-def whitespace_check(path, illegal_total):
+def whitespace_check(args, path, illegal_total):
     """
     Check for leading or trailing whitespace characters in the file path.
     """
@@ -189,7 +189,7 @@ def whitespace_check(path, illegal_total):
     whitespace_match = re.findall(pattern, str(path))
     whitespace_count = len(whitespace_match)
     if whitespace_count != 0:
-        write_to_file(
+        write_to_file( 
             illegal_path=path,
             whitespace_count=whitespace_count,
         )
@@ -200,7 +200,7 @@ def whitespace_check(path, illegal_total):
     return illegal_total
 
 
-def path_len_check(path, path_total):
+def path_len_check(args, path, path_total):
     """
     Check the length of a path and if length is over 255 characters
     record the path and the length in the output.txt
@@ -213,6 +213,7 @@ def path_len_check(path, path_total):
         logger.info(char_limit_msg)
 
         write_to_file(
+            args, 
             illegal_path=str(illegal_path),
             path_length=len(str(illegal_path)),
         )
@@ -239,6 +240,7 @@ def prepare_summary(args, path_total, illegal_total):
             Path checked = {args.path} \n\
             Recursive check: {args.recursive}\n\
             WhiteSpace check: {args.whitespace}\n\
+            Output file path: {args.destination}\n\
             "
     summary_list.append(part_1)
 
@@ -279,16 +281,30 @@ def prepare_summary(args, path_total, illegal_total):
 
 def write_to_file(*args, **kwargs):
     file_date = str(strftime("%Y%m%d", localtime()))
-    with open(f"{file_date}_illegal_paths.txt", "a+") as f:
-        for key, value in kwargs.items():
-            if key != "summary":
-                f.write(f"\n{key}: {value}")
-            else:
+    filename = f"{file_date}_illegal_paths.txt"
+
+    # keys = list(kwargs.keys())
+    # print(list)
+    # keys.sort()
+    # sorted_dict = {i: kwargs[i] for i in keys}
+    # print(sorted_dict)
+
+    for key, value in kwargs.items():
+
+        kwarg_list.append()
+
+        if key != "summary":
+            with open(filename, "a+") as f:
+                f.write(f"\n{key}: {value}\n")
+        else:
+            with open(filename, "r+") as f:
+                content = f.read()
+                f.seek(0, 0)
                 for line in value:
                     f.write(line + "\n")
 
-        f.write("\n")
-        f.close()
+    f.close()
+
     return
 
 

@@ -157,3 +157,5 @@ _old/*
 *.spec, 
 build/
 dist/
+charchecker.build/*
+charchecker.dist/*
