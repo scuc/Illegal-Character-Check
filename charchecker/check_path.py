@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import sys
-from collections import Counter
+from collections import Counter, OrderedDict
 from pathlib import Path
 from time import localtime, strftime
 
@@ -166,7 +166,9 @@ def illegalchar_check(args, path, path_total, illegal_total):
                 continue
 
         if len(illegal_chars) > 0:
-            write_to_file(args, illegal_path=path, illegal_chars=illegal_chars)
+            illegal_values = OrderedDict({"illegal_path": path, "illegal_chars": illegal_chars})
+            write_to_file(args, illegal_values=illegal_values)
+            logger.info(f"Illegal Characters: {illegal_values}")
 
         return path_total, illegal_total
 
@@ -189,11 +191,10 @@ def whitespace_check(args, path, illegal_total):
     whitespace_match = re.findall(pattern, str(path))
     whitespace_count = len(whitespace_match)
     if whitespace_count != 0:
-        write_to_file( 
-            illegal_path=path,
-            whitespace_count=whitespace_count,
-        )
+        illegal_values = OrderedDict({"illegal_path": path, "whitespace_count": whitespace_count})
+        write_to_file(illegal_values=illegal_values)
         illegal_total.update({"whitespace_count": whitespace_count})
+        logger.info(f"Illegal whitespace: {illegal_values}")
     else:
         illegal_total
 
@@ -212,11 +213,8 @@ def path_len_check(args, path, path_total):
         )
         logger.info(char_limit_msg)
 
-        write_to_file(
-            args, 
-            illegal_path=str(illegal_path),
-            path_length=len(str(illegal_path)),
-        )
+        illegal_values = OrderedDict({"illegal_path": path, "path_length":len(str(illegal_path))})
+        write_to_file(args, illegal_values=illegal_values)
         path_total["char_limit_count"] += 1
     else:
         pass
@@ -255,7 +253,7 @@ def prepare_summary(args, path_total, illegal_total):
     summary_list.append(part_2)
 
     if args.whitespace is not False:
-        part_3 = f"\n            {illegal_total['whitespace_count']} illegal whitespace characters found."
+        part_3 = f"\n            {illegal_total['whitespace_count']} illegal whitespace characters found.\n"
         summary_list.append(part_3)
     else:
         part_3 = ""
@@ -283,27 +281,25 @@ def write_to_file(*args, **kwargs):
     file_date = str(strftime("%Y%m%d", localtime()))
     filename = f"{file_date}_illegal_paths.txt"
 
-    # keys = list(kwargs.keys())
-    # print(list)
-    # keys.sort()
-    # sorted_dict = {i: kwargs[i] for i in keys}
-    # print(sorted_dict)
-
     for key, value in kwargs.items():
 
-        kwarg_list.append()
+        if key == "illegal_values":
+            value = list(value.items())
 
-        if key != "summary":
-            with open(filename, "a+") as f:
-                f.write(f"\n{key}: {value}\n")
-        else:
-            with open(filename, "r+") as f:
-                content = f.read()
-                f.seek(0, 0)
-                for line in value:
-                    f.write(line + "\n")
+        with open(filename, "a+") as f:
 
-    f.close()
+            if key in ["start_msg", "args_msg"]:
+                f.write(f"{value}\n")
+
+            if key == "illegal_values":
+                formatted_value = f"\n {value[0]} \n{value[1]} \n"
+                f.write(f"{formatted_value}\n")
+
+            if key == "summary":
+                for line in value: 
+                    f.write(line)
+
+        f.close()
 
     return
 
