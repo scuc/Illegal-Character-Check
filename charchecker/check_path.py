@@ -71,15 +71,18 @@ def check_path(args):
 
                 # Check all files, in all sub-dir in set path
                 for name in files:
-                    path = Path(root, name)
-                    path_total = update_count(path, path_total)
-                    path_total = path_len_check(args, path, path_total)
+                    if not name.startswith("."):
+                        path = Path(root, name)
+                        path_total = update_count(path, path_total)
+                        path_total = path_len_check(args, path, path_total)
 
-                    path_total, illegal_total = illegalchar_check(
-                        args, path, path_total, illegal_total
-                    )
+                        path_total, illegal_total = illegalchar_check(
+                            args, path, path_total, illegal_total
+                        )
 
-                    illegal_total = whitespace_check(args, path, illegal_total)
+                        illegal_total = whitespace_check(args, path, illegal_total)
+                    else:
+                        continue
 
         summary = prepare_summary(args, path_total, illegal_total)
         write_to_file(args, summary=summary)
