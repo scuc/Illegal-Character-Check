@@ -39,7 +39,7 @@ def set_logger():
     """
     Setup logging configuration
     """
-    path = os.path.join("charchecker/logging.yaml")
+    path = os.path.join("logging.yaml")
 
     with open(path, "rt") as f:
         config = yaml.safe_load(f.read())
