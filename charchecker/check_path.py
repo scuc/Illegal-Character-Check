@@ -169,7 +169,9 @@ def illegalchar_check(args, path, path_total, illegal_total):
                 continue
 
         if len(illegal_chars) > 0:
-            illegal_values = OrderedDict({"illegal_path": path, "illegal_chars": illegal_chars})
+            illegal_values = OrderedDict(
+                {"illegal_path": path, "illegal_chars": illegal_chars}
+            )
             write_to_file(args, illegal_values=illegal_values)
             logger.info(f"Illegal Characters: {illegal_values}")
 
@@ -188,13 +190,15 @@ def illegalchar_check(args, path, path_total, illegal_total):
 
 def whitespace_check(args, path, illegal_total):
     """
-    Check for leading or trailing whitespace characters in the file path.
+    Check for leading, trailing, or double whitespace characters in the file path.
     """
-    pattern = re.compile(r"(^\s+|\s+$|\s+/|/\s+)")
+    pattern = re.compile(r"(^\s+|\s+$|\s+/|/\s+|\s{2,})")
     whitespace_match = re.findall(pattern, str(path))
     whitespace_count = len(whitespace_match)
     if whitespace_count != 0:
-        illegal_values = OrderedDict({"illegal_path": path, "whitespace_count": whitespace_count})
+        illegal_values = OrderedDict(
+            {"illegal_path": path, "whitespace_count": whitespace_count}
+        )
         write_to_file(illegal_values=illegal_values)
         illegal_total.update({"whitespace_count": whitespace_count})
         logger.info(f"Illegal whitespace: {illegal_values}")
@@ -216,7 +220,9 @@ def path_len_check(args, path, path_total):
         )
         logger.info(char_limit_msg)
 
-        illegal_values = OrderedDict({"illegal_path": path, "path_length":len(str(illegal_path))})
+        illegal_values = OrderedDict(
+            {"illegal_path": path, "path_length": len(str(illegal_path))}
+        )
         write_to_file(args, illegal_values=illegal_values)
         path_total["char_limit_count"] += 1
     else:
@@ -285,12 +291,10 @@ def write_to_file(*args, **kwargs):
     filename = f"{file_date}_illegal_paths.txt"
 
     for key, value in kwargs.items():
-
         if key == "illegal_values":
             value = list(value.items())
 
         with open(filename, "a+") as f:
-
             if key in ["start_msg", "args_msg"]:
                 f.write(f"{value}\n")
 
@@ -299,7 +303,7 @@ def write_to_file(*args, **kwargs):
                 f.write(f"{formatted_value}\n")
 
             if key == "summary":
-                for line in value: 
+                for line in value:
                     f.write(line)
 
         f.close()
