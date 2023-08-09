@@ -21,8 +21,8 @@ def check_path(args):
                     START CHECK: {date_start}\n\
     ================================================================\n\
    "
-    write_to_file(start_msg=start_msg)
-    write_to_file(args_msg=args.args_msg)
+    # write_to_file(start_msg=start_msg)
+    # write_to_file(args_msg=args.args_msg)
 
     path_total = {
         "char_limit_count": 0,
@@ -254,6 +254,8 @@ def prepare_summary(args, path_total, illegal_total):
     part_2 = f"\n\
             {path_total['dir_count']} sub-directories in path.\n\
             {path_total['file_count']} files in path.\n\
+            \n\
+            {len(path_total['illegal_char_list'])} illegal characters found in total.\n\
             {path_total['illegal_dirname_total']} directory names with illegal characters.\n\
             {path_total['illegal_filename_total']} filenames with illegal characters.\n\
             {path_total['char_limit_count']} file paths that exceed the 255 Windows limit.\n\
@@ -303,8 +305,12 @@ def write_to_file(*args, **kwargs):
                 f.write(f"{formatted_value}\n")
 
             if key == "summary":
-                for line in value:
-                    f.write(line)
+                with open(filename, "r") as contents:
+                    save = contents.read()
+                with open(filename, "w") as contents:
+                    for line in value:
+                        contents.write(line)
+                    contents.write(save)
 
         f.close()
 
