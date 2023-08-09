@@ -31,8 +31,8 @@ illegalchar_list = [
     "+",
 ]
 
-input = ""
-destination = ""
+input = "/Users/cucos001/Desktop/test"
+destination = "/Users/cucos001/Desktop/"
 
 
 def check_path():
@@ -42,13 +42,13 @@ def check_path():
     exitcode = 0
     date_start = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))
 
-    start_msg = f"\n\
-    ================================================================\n\
-                    START CHECK: {date_start}\n\
-    ================================================================\n\
-   "
-    write_to_file(start_msg=start_msg)
-    write_to_file()
+    #     start_msg = f"\n\
+    #     ================================================================\n\
+    #                     START CHECK: {date_start}\n\
+    #     ================================================================\n\
+    #    "
+    #     write_to_file(start_msg=start_msg)
+    #     write_to_file()
 
     path_total = {
         "char_limit_count": 0,
@@ -246,6 +246,7 @@ def prepare_summary(path_total, illegal_total):
 
     part_1 = f"\n\
     ========================== SUMMARY ================================\n\
+    \n\
             Check completed on: {date_end}\n\
             Path checked = {input} \n\
             Output file path: {destination}\n\
@@ -255,8 +256,11 @@ def prepare_summary(path_total, illegal_total):
     part_2 = f"\n\
             {path_total['dir_count']} sub-directories in path.\n\
             {path_total['file_count']} files in path.\n\
+            \n\
+            {len(path_total['illegal_char_list'])} illegal characters found in total.\n\
             {path_total['illegal_dirname_total']} directory names with illegal characters.\n\
             {path_total['illegal_filename_total']} filenames with illegal characters.\n\
+            \n\
             {path_total['char_limit_count']} file paths that exceed the 255 Windows limit.\n\
             {path_total['ds_count']} .DS_Store files found in path.\n\
             "
@@ -287,7 +291,9 @@ def prepare_summary(path_total, illegal_total):
 
 def write_to_file(*args, **kwargs):
     file_date = str(strftime("%Y%m%d", localtime()))
-    filename = f"{file_date}_illegal_paths.txt"
+    filename = (
+        f"{file_date}_illegalpaths_{input.split('/')[2]}-{os.path.basename(input)}.txt"
+    )
     report = os.path.join(destination, filename)
 
     for key, value in kwargs.items():
@@ -303,8 +309,12 @@ def write_to_file(*args, **kwargs):
                 f.write(f"{formatted_value}\n")
 
             if key == "summary":
-                for line in value:
-                    f.write(line)
+                with open(report, "r") as contents:
+                    save = contents.read()
+                with open(report, "w") as contents:
+                    for line in value:
+                        contents.write(line)
+                    contents.write(save)
 
         f.close()
 
