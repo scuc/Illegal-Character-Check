@@ -2,8 +2,11 @@ import os
 import re
 import sys
 from collections import Counter, OrderedDict
+from datetime import datetime
 from pathlib import Path
 from time import localtime, strftime
+
+import pytz
 
 illegalchar_list = [
     "|",
@@ -35,13 +38,27 @@ input = "/Users/cucos001/Desktop/test"
 destination = "/Users/cucos001/Desktop/"
 
 
+def get_datetime():
+    """
+    convert a local UTC datetime to ET timezone
+    """
+    datetime_utc = str(strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    date = (
+        datetime.strptime(datetime_utc, "%Y-%m-%d %H:%M:%S")
+        .astimezone(pytz.timezone("US/Eastern"))
+        .strftime("%Y-%m-%d %H:%M:%S")
+    )
+
+    return date
+
+
 def check_path():
     """
     Check each path and look for any illegal characters or whitespace.
     """
     exitcode = 0
-    date_start = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))
 
+    #     date_start = get_datetime()
     #     start_msg = f"\n\
     #     ================================================================\n\
     #                     START CHECK: {date_start}\n\
@@ -242,7 +259,7 @@ def prepare_summary(path_total, illegal_total):
     unique_char_list = set(path_total["illegal_char_list"])
 
     summary_list = []
-    date_end = str(strftime("%A, %d. %B %Y %I:%M%p", localtime()))
+    date_end = get_datetime()
 
     part_1 = f"\n\
     ========================== SUMMARY ================================\n\
